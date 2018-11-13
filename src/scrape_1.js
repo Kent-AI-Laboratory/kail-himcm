@@ -2,17 +2,79 @@
 const request = require('request')
 // Require cheerio for page navigation
 const cheerio = require('cheerio')
-// Csv parser for reading in the csv of names
-
-
+// Require plotly for plotting data
+const plotly = require('plotly')('evankirkiles', 'bGlDmLE1U2Ac8jDw5RmP')
+	
 // Constants
 const BASEURL = 'https://captaincoaster.com/en/ranking/coasters?filters%5Bcontinent%5D&filters%5BmaterialType%5D&page='
 
-// First, retrieve the list of names from the excel spreadsheet using csv-parse	
+// Function which builds a csv of the data of all the rollercoasters
+module.exports.exportCoasterRanks = function exportCoasterRanks(pages) {
+	// Array of all the ranks
+	let scores = []
+	let ranks = []
+	let names = []
+	let callsRemaining = pages
+	// Iterate through the pages and pull the ranks
+	for (let page = 1; page <= pages; page++) {
+		request.get({
+			url: BASEURL + page,
+			headers: {
+				'X-Requested-With':'XMLHttpRequest',
+				'Accept':'text/html,*/*;q=0.01',
+				'Accept-Language':'en-us'
+			}
+		}, (err, resp, body) => {
+			// Ensure no errors
+			if (err) { console.log('Error occurred at page ' + page + '! Aborting this coaster parse.'); return }
+
+			// Now use Cheerio to parse through the body and get each coaster
+			const $ = cheerio.load(body)
+			$('ul[class="media-list content-group"]').find('li').each(function(i, element) {
+				let data = {};
+				// Manipulate the string to build an object containing all data
+				$(element).find('h2 > a').each(function(i, subelement) {
+					let parts = $(subelement).text().trim().split("-")
+					data['rank'] = parseInt(parts[0].trim())
+					data['name'] = parts[1].trim()
+				})
+				$(element).find('h3').each(function(i, subelement) {
+					data['score'] = parseFloat($(subelement).text().trim().replace(",", ".").replace("%", ""))
+				})
+
+				// Print out the data for debugging purposes
+				if (data['rank'] && data['name'] && data['score']) {
+					scores.push(data['score'])
+					ranks.push(data['rank'])
+					names.push(data['name'])
+				}
+			})
+
+			// Decrement callsremaining
+			--callsRemaining
+			// Perform writing here if all records acquired
+			if (callsRemaining <= 0) {
+				// Display distribution of ranks
+				var trace1 = [{
+					x: scores,
+					y: ranks,
+					name: 'Roller Coasters',
+					text: names,
+					mode: 'markers',
+					type: 'scatter'
+				}]
+				var graphOptions = {filename: 'scoresonly', fileopt: 'overwrite'}
+				plotly.plot(trace1, graphOptions, function (err, msg) {
+					console.log(msg)
+				})
+			}
+		})
+	}
+}
 
 // Build a list of all the rollercoasters on a page, checking against the list of names for each one
 // and discarding those not found in the list of rollercoasters.
-module.exports = function checkCoasters(page, names, callback) {
+module.exports.checkCoasters = function checkCoasters(page, names, callback) {
 	request.get({
 		url: BASEURL + page,
 		headers: {

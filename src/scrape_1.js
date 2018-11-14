@@ -116,23 +116,23 @@ module.exports.checkCoasters = function checkCoasters(page, names, callback) {
 			// Print out the data for debugging purposes
 			if (data['rank'] && data['name'] && data['score']) {
 				// Find coasters whose names are the exact same (need to expand upon this to become more encompassing (maybe use find?))
-				let foundPark = names.find(function(element) {
-					if (element['name'] == data['name']) {
+				let foundPark = names.findIndex(function(element) {
+					if (element[0] == data['name']) {
 						// For data found, run a quick check on the park and country 
-						if (!element['park'].replace(" ", "").replace(".", "").toUpperCase().includes(data['park'].replace(" ", "").replace(".", "").toUpperCase())) {
-							console.log('Park for ' + data['name'] + ', "' + data['park'] + '", does not match data park "' + element['park'] + '"')
-						} else if (!element['country'].replace(" ", "").replace(".", "").toUpperCase().includes(data['country'].replace(" ", "").replace(".", "").toUpperCase())) {
-							console.log('Country for ' + data['name'] + ', "' + data['country'] + '", does not match data park "' + element['country'] + '"')
+						if (!element[1].replace(" ", "").replace(".", "").toUpperCase().includes(data['park'].replace(" ", "").replace(".", "").toUpperCase())) {
+							console.log('Park for ' + data['name'] + ', "' + data['park'] + '", does not match data park "' + element[1] + '"')
+						} else if (!element[4].replace(" ", "").replace(".", "").toUpperCase().includes(data['country'].replace(" ", "").replace(".", "").toUpperCase())) {
+							console.log('Country for ' + data['name'] + ', "' + data['country'] + '", does not match data park "' + element[4] + '"')
 						} else {
-							
 							return true
 						}
 					}
 				})
 
-				if (foundPark) {
+				if (foundPark != -1) {
+					data['index'] = foundPark
 					fulldata.push(data)
-					console.log(data['rank'] + ': ' + data['name'] + ', ' + data['score'])
+					// console.log(data['rank'] + ': ' + data['name'] + ', ' + data['score'])
 				}
 			}
 		})

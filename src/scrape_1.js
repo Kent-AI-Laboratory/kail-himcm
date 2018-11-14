@@ -88,7 +88,7 @@ module.exports.checkCoasters = function checkCoasters(page, names, callback) {
 
 		// Now use Cheerio to parse through the body and get each coaster
 		const $ = cheerio.load(body)
-		let fulldata = {}
+		let fulldata = []
 		$('ul[class="media-list content-group"]').find('li').each(function(i, element) {
 			let data = {};
 			// Manipulate the string to build an object containing all data
@@ -100,12 +100,38 @@ module.exports.checkCoasters = function checkCoasters(page, names, callback) {
 			$(element).find('h3').each(function(i, subelement) {
 				data['score'] = $(subelement).text().trim().replace(",", ".").replace("%", "")
 			})
+			$(element).find('ul > li').each(function(i, subelement) {
+				switch(i) {
+					case 0: 
+						data['park'] = $(subelement).text().trim()
+						break
+					case 1:
+						data['country'] = $(subelement).text().trim()
+						break
+					default:
+						break
+				}
+			})
 
 			// Print out the data for debugging purposes
 			if (data['rank'] && data['name'] && data['score']) {
 				// Find coasters whose names are the exact same (need to expand upon this to become more encompassing (maybe use find?))
-				if (names.indexOf(data['name']) != -1) {
-					fulldata[data['name']] = data
+				let foundPark = names.find(function(element) {
+					if (element['name'] == data['name']) {
+						// For data found, run a quick check on the park and country 
+						if (!element['park'].replace(" ", "").replace(".", "").toUpperCase().includes(data['park'].replace(" ", "").replace(".", "").toUpperCase())) {
+							console.log('Park for ' + data['name'] + ', "' + data['park'] + '", does not match data park "' + element['park'] + '"')
+						} else if (!element['country'].replace(" ", "").replace(".", "").toUpperCase().includes(data['country'].replace(" ", "").replace(".", "").toUpperCase())) {
+							console.log('Country for ' + data['name'] + ', "' + data['country'] + '", does not match data park "' + element['country'] + '"')
+						} else {
+							
+							return true
+						}
+					}
+				})
+
+				if (foundPark) {
+					fulldata.push(data)
 					console.log(data['rank'] + ': ' + data['name'] + ', ' + data['score'])
 				}
 			}

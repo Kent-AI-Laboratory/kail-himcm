@@ -1,2 +1,2 @@
-# kail-himcm
-KAIL submissions to HiMCM 2018
+# Kail HiMCM 2018 (Problem B)
+KAIL submissions to HiMCM 2018 problem B, which asks for participants to develop a purely quantitative roller coaster ranking system based on factors such as height, length, time, building material, etc. We plan to use supervised learning to fit a multivariate linear regression using the quantitiative coaster data as features with target of a current ranking system based on purely subjective coaster reviews. 
